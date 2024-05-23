@@ -2,11 +2,6 @@ package com.cooptech.pdfeditor.application
 
 import android.app.Application
 import android.util.Log
-import androidx.appcompat.app.AppCompatDelegate
-import com.cooptech.pdfeditor.R
-import com.cooptech.pdfeditor.ads.AppOpenAdManager
-import com.cooptech.pdfeditor.mvm.viewmodels.MainViewModel
-import com.google.android.gms.ads.MobileAds
 import com.google.firebase.Firebase
 import com.google.firebase.FirebaseApp
 import com.google.firebase.remoteconfig.ConfigUpdate
@@ -22,14 +17,12 @@ import javax.inject.Inject
 class ApplicationClass: Application() {
 
     @Inject
-    lateinit var appOpenAdManager: AppOpenAdManager
-    @Inject
     lateinit var remoteConfig: FirebaseRemoteConfig
 
     override fun onCreate() {
         super.onCreate()
-        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
 
+        //fetch and activate and add listener
         fetchNadActivate()
         addRemoteConfigListener(remoteConfig)
 
