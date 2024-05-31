@@ -1,4 +1,3 @@
-package com.tenx.translator.mvvm.preference_datastore
 
 import android.content.Context
 import androidx.datastore.core.DataStore
