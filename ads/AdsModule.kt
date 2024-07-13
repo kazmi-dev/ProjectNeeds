@@ -32,4 +32,11 @@ object AdsModule {
         return NativeAd(context)
     }
 
+    @Provides
+    @Singleton
+    fun providesRewardedAdInstance(@ApplicationContext context: Context): RewardedAdManager {
+        return RewardedAdManager(context)
+    }
+
+
 }
