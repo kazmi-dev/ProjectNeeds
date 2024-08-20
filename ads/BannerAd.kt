@@ -1,7 +1,4 @@
-package com.tenx.translator.ads
-
 import android.content.Context
-import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Build
 import android.os.Bundle
@@ -12,13 +9,12 @@ import android.view.WindowManager
 import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.annotation.RequiresApi
-import androidx.constraintlayout.widget.ConstraintLayout
+import com.cooptech.pdfreader.R
 import com.google.ads.mediation.admob.AdMobAdapter
 import com.google.android.gms.ads.AdListener
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
-import com.tenx.translator.R
 import java.util.UUID
 
 /**
@@ -99,7 +95,7 @@ class BannerAd(
         adView = AdView(context)
         //loading customization
         loadingView.layoutParams.height = adSize.getHeightInPixels(context)
-        loadingView.background = ColorDrawable(context.resources.getColor(R.color.btn_color_orange, null))
+        loadingView.background = ColorDrawable(context.resources.getColor(R.color.black, null))
 
         adViewContainer.addView(adView)
         adViewContainer.viewTreeObserver.addOnGlobalLayoutListener {
@@ -111,11 +107,6 @@ class BannerAd(
         }
     }
 
-//    private fun convertDpToPx(dp: Int): Int {
-//        val density = context.resources.displayMetrics.density
-//        return (dp * density).toInt()
-//    }
-
     private fun loadBanner(loadingView: TextView) {
         //set banner ad id
         adView.adUnitId = if (isCollapsible) context.getString(R.string.collapsive_banner_ad_id) else context.getString(R.string.banner_ad_id)
@@ -126,9 +117,6 @@ class BannerAd(
         Log.d(bannerLog, "ad size: $adSize")
 
         //request banner ad
-
-
-
 
         val adRequestBuilder: AdRequest = if (isCollapsible){
             val extras = Bundle()
