@@ -1,5 +1,3 @@
-package com.tenx.backgroundremover.mvvm.room_db
-
 import android.content.Context
 import androidx.room.Room
 import com.tenx.backgroundremover.mvvm.database.room.Database
