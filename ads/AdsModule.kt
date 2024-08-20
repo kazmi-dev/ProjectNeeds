@@ -1,7 +1,5 @@
-package com.tenx.translator.ads
-
 import android.content.Context
-import com.tenx.translator.baseapplication.ApplicationClass
+import com.cooptech.pdfreader.applicationClass.ApplicationClass
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -15,28 +13,33 @@ object AdsModule {
 
     @Provides
     @Singleton
-    fun providesAppOpenInstance(@ApplicationContext context: Context): AppOpenAdManager {
-        return AppOpenAdManager(context as ApplicationClass)
-    }
-
-
-    @Provides
-    @Singleton
-    fun providesInterstitialInstance(@ApplicationContext context: Context): InterstitialAdManager {
+    fun providesInterstitialAdManagerInstance(@ApplicationContext context: Context): InterstitialAdManager{
         return InterstitialAdManager(context)
     }
 
     @Provides
     @Singleton
-    fun providesNativeAdInstance(@ApplicationContext context: Context): NativeAd{
-        return NativeAd(context)
+    fun providesAppOpenAdManagerInstance(@ApplicationContext context: Context): AppOpenAdManager {
+        return AppOpenAdManager(context as ApplicationClass)
     }
 
     @Provides
     @Singleton
-    fun providesRewardedAdInstance(@ApplicationContext context: Context): RewardedAdManager {
+    fun providesRewardedAdManagerInstance(@ApplicationContext context: Context): RewardedAdManager {
         return RewardedAdManager(context)
     }
 
+    @Provides
+    @Singleton
+    fun providesRewardedInterstitialAdManagerInstance(@ApplicationContext context: Context): RewardedInterstitialAdManager {
+        return RewardedInterstitialAdManager(context)
+    }
+
+
+    @Provides
+    @Singleton
+    fun providesNativeAdInstance(@ApplicationContext context: Context): NativeAdsManager {
+        return NativeAdsManager(context)
+    }
 
 }
