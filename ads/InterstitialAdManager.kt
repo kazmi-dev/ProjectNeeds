@@ -1,18 +1,13 @@
-package com.tenx.translator.ads
-
 import android.app.Activity
 import android.content.Context
 import android.util.Log
+import com.cooptech.pdfreader.R
 import com.google.android.gms.ads.AdError
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.FullScreenContentCallback
 import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.interstitial.InterstitialAd
 import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
-import com.tenx.translator.R
-import com.tenx.translator.utils.AppSettings.Companion.SMALL_TIME
-import com.tenx.translator.utils.dialogs.LoadingAdDialog
-import com.tenx.translator.utils.dialogs.LoadingAdDialog.Companion.showAdLoading
 
 
 /**
@@ -21,102 +16,126 @@ This is Interstitial Ad implementation
 ---------------------------------------------
  */
 
-class InterstitialAdManager(private val context: Context) {
-
-    private val INTERSTITIAL_LOG = "23865783458934445"
-    private var interstitialAd: InterstitialAd? = null
+class InterstitialAdManager(
+    private val context: Context,
+) {
 
     companion object {
-        var isInterstitialAdShowing = false
-        private var clickCount = 0
+        private const val INTERSTITIAL_AD_LOG = "interstitial_ad_log_267362545"
+        var isInterstitialShowing: Boolean = false
+        var interstitialAdCount: Int = 0
+        var adLoadFailCount: Int = 0
     }
 
-    //load interstitial ad fun
-    fun loadInterstitialAd() {
-
-        //request ad
-        val adRequest = AdRequest.Builder().build()
-
-        //load Ad
-        InterstitialAd.load(
-            context,
-            context.getString(R.string.interstitial_ad_id),
-            adRequest,
-            interstitialAdLoadCallback
-        )
-
-    }
+    private var interstitialAd: InterstitialAd? = null
+    private var isAdLoading: Boolean = false
+    private var adUnitId: String = context.getString(R.string.interstitial_ad_id)
 
     private val interstitialAdLoadCallback = object : InterstitialAdLoadCallback() {
-
         override fun onAdLoaded(ad: InterstitialAd) {
-            Log.d(INTERSTITIAL_LOG, "Ad loaded.")
+            adLoadFailCount = 0
+            isAdLoading = false
             interstitialAd = ad
         }
 
         override fun onAdFailedToLoad(error: LoadAdError) {
-            Log.d(INTERSTITIAL_LOG, "Ad loaded.")
+            isAdLoading = false
             interstitialAd = null
+            handleAdLoadShowFail()
         }
-
     }
 
-    private fun isInterstitialAdAvailable(): Boolean {
-        return interstitialAd != null
+    fun setInterstitialAdUnitId(adUnitId: String) {
+        this@InterstitialAdManager.adUnitId = adUnitId
     }
 
-    private fun showInterstitialAdIfAvailable(currentActivity: Activity) {
-
-        if (isInterstitialAdShowing) {
-            Log.d(INTERSTITIAL_LOG, "Ad already showing.")
+    private fun loadAd() {
+        //check if ad is not null
+        if (interstitialAd != null) {
             return
         }
 
-        if (!isInterstitialAdAvailable()) {
-            Log.d(INTERSTITIAL_LOG, "Ad not loaded.")
-            loadInterstitialAd()
+        //check if ad is already loading
+        if (isAdLoading) {
+            return
+        }
+        isAdLoading = true
+        //request ad
+        val adRequest = AdRequest.Builder().build()
+        //load ad
+        InterstitialAd.load(
+            context,
+            adUnitId,
+            adRequest,
+            interstitialAdLoadCallback
+        )
+    }
+
+    fun showInterstitialAdIfAvailable(activity: Activity, callback: (AdStates) -> Unit) {
+
+        //check if ad is available
+        if (interstitialAd == null) {
+            loadAd()
             return
         }
 
-        //Interstitial ad load callback
+        //check if ad is already showing
+        if (isInterstitialShowing) {
+            return
+        }
+
         interstitialAd?.fullScreenContentCallback = object : FullScreenContentCallback() {
 
             override fun onAdShowedFullScreenContent() {
-                Log.d(INTERSTITIAL_LOG, "Ad Showing.")
+                Log.d(INTERSTITIAL_AD_LOG, "onAdShowedFullScreenContent: Ad Showed")
+                isInterstitialShowing = true
+                callback(AdStates.AD_SHOWED)
             }
 
             override fun onAdDismissedFullScreenContent() {
-                Log.d(INTERSTITIAL_LOG, "Ad dismissed.")
-                loadInterstitialAd()
+                Log.d(INTERSTITIAL_AD_LOG, "onAdDismissedFullScreenContent: Ad Dismissed")
                 interstitialAd = null
-                isInterstitialAdShowing = false
+                isInterstitialShowing = false
+                loadAd()
+                callback(AdStates.AD_DISMISSED)
             }
 
             override fun onAdFailedToShowFullScreenContent(error: AdError) {
-                Log.d(INTERSTITIAL_LOG, "Ad failed to load: ${error.message}")
-                isInterstitialAdShowing = false
+                Log.d(INTERSTITIAL_AD_LOG, "onAdFailedToShowFullScreenContent: ${error.message}")
+                interstitialAd = null
+                isInterstitialShowing = false
+                handleAdLoadShowFail()
+                callback(AdStates.AD_FAILED_TO_SHOW)
             }
 
         }
-        isInterstitialAdShowing = true
-        showAdLoading(currentActivity, SMALL_TIME){
-            interstitialAd?.show(currentActivity)
-        }
+
+        interstitialAd?.show(activity)
 
     }
 
-    fun showInterstitialAd(currentActivity: Activity){
-        if (clickCount == 2){
-            clickCount = 0
-            Log.d(INTERSTITIAL_LOG, "click count: $clickCount")
-            showInterstitialAdIfAvailable(currentActivity)
+    private fun handleAdLoadShowFail() {
+        if (adLoadFailCount <= 5){
+            adLoadFailCount++
+            loadAd()
         }else{
-            clickCount++
-            Log.d(INTERSTITIAL_LOG, "click count: $clickCount")
+            adLoadFailCount = 0
         }
     }
 
 
+    fun showInterstitialAdIfAvailable(
+        activity: Activity,
+        adCount: Int,
+        callback: (AdStates) -> Unit,
+    ) {
+        if (adCount == interstitialAdCount) {
+            interstitialAdCount = 0
+            showInterstitialAdIfAvailable(activity, callback)
+        } else {
+            interstitialAdCount++
+        }
+    }
 
 
 }
