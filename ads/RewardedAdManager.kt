@@ -1,9 +1,8 @@
-package com.cooptech.collagephotoeditor.ads
-
 import android.app.Activity
 import android.content.Context
 import android.util.Log
-import com.cooptech.collagephotoeditor.R
+import com.capra.live.hdwallpaper.R
+import com.capra.live.hdwallpaper.mvvm.enums.AdState
 import com.google.android.gms.ads.AdError
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.FullScreenContentCallback
@@ -21,6 +20,10 @@ class RewardedAdManager(private val context: Context) {
 
 
     fun loadRewardedAd(onLoaded:(isFailed:Boolean)->Unit) {
+        if (rewardedAd != null){
+            onLoaded(true)
+            return
+        }
         isRewardedAdLoading = true
 
         //request Ad
@@ -35,18 +38,18 @@ class RewardedAdManager(private val context: Context) {
         )
     }
 
-    private fun rewardAdLoadCallback(onLoaded:(isFailed:Boolean)->Unit) = object: RewardedAdLoadCallback(){
+    private fun rewardAdLoadCallback(onLoaded:(isLoaded:Boolean)->Unit) = object: RewardedAdLoadCallback(){
         override fun onAdLoaded(ad: RewardedAd) {
             Log.d(REWARDED_LOG, "rewarded ad loaded")
             isRewardedAdLoading = false
             rewardedAd = ad
-            onLoaded(false)
+            onLoaded(true)
         }
         override fun onAdFailedToLoad(loadError: LoadAdError) {
             Log.d(REWARDED_LOG, "failed to load rewarded ad: ${loadError.message}")
             isRewardedAdLoading = false
             rewardedAd = null
-            onLoaded(true)
+            onLoaded(false)
         }
     }
 
@@ -74,13 +77,14 @@ class RewardedAdManager(private val context: Context) {
             override fun onAdDismissedFullScreenContent() {
                 Log.d(REWARDED_LOG, "rewarded ad on dismiss")
                 isRewardedAdShowing = false
+                rewardedAd = null
                 callback(AdState.IS_DISMISSED)
             }
 
             override fun onAdFailedToShowFullScreenContent(adError: AdError) {
                 Log.d(REWARDED_LOG, "adError: ${adError.message}")
-                callback(AdState.IS_FAILED_TO_LOAD)
                 rewardedAd = null
+                callback(AdState.IS_FAILED_TO_LOAD)
             }
 
         }
