@@ -1,12 +1,12 @@
-package com.cooptech.collagephotoeditor.ads.native
-
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.FrameLayout
-import com.cooptech.collagephotoeditor.R
-import com.cooptech.collagephotoeditor.databinding.AdNativeMediumSmallViewBinding
-import com.cooptech.collagephotoeditor.databinding.AdNativeMediumViewBinding
+import androidx.core.content.res.ResourcesCompat
+import androidx.core.view.isVisible
+import com.capra.live.hdwallpaper.R
+import com.capra.live.hdwallpaper.databinding.NativeMediumAdViewBinding
+import com.capra.live.hdwallpaper.databinding.NativeSmallMediumAdViewBinding
 import com.google.android.gms.ads.AdLoader
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.nativead.NativeAd
@@ -23,22 +23,26 @@ class NativeAdManager(
         initNativeAd()
     }
 
-    private fun initNativeAd(){
+    private fun initNativeAd() {
 
-        val adLoader = AdLoader.Builder(context, context.getString(R.string.native_ad_id)).forNativeAd { nativeAd->
+        val adLoader = AdLoader.Builder(context, context.getString(R.string.native_ad_id))
+            .forNativeAd { nativeAd ->
 
-            when(layout){
-                NativeTemplates.MEDIUM_SMALL-> {
-                    val binding = AdNativeMediumSmallViewBinding.inflate(LayoutInflater.from(context))
-                    populateMediumSmallAd(nativeAd, binding, container, isDark)
+                when (layout) {
+                    NativeTemplates.MEDIUM_SMALL -> {
+                        val binding =
+                            NativeSmallMediumAdViewBinding.inflate(LayoutInflater.from(context))
+                        populateMediumSmallAd(nativeAd, binding, container, isDark)
+                    }
+
+                    else -> {
+                        val binding =
+                            NativeMediumAdViewBinding.inflate(LayoutInflater.from(context))
+                        populateMediumAd(nativeAd, binding, container, isDark)
+                    }
                 }
-                else->{
-                    val binding= AdNativeMediumViewBinding.inflate(LayoutInflater.from(context))
-                    populateMediumAd(nativeAd, binding, container, isDark)
-                }
+
             }
-
-        }
             .withNativeAdOptions(NativeAdOptions.Builder().build())
             .build()
 
@@ -48,22 +52,64 @@ class NativeAdManager(
 
     private fun populateMediumAd(
         nativeAd: NativeAd,
-        binding: AdNativeMediumViewBinding,
+        binding: NativeMediumAdViewBinding,
         container: FrameLayout,
         isDark: Boolean
     ) {
         binding.apply {
-//            if (isDark){
-//                nativeAdView.background = ResourcesCompat.getDrawable(context.resources, R.drawable.app_dark_bg, null)
-//            }else{
-//                nativeAdView.background = ResourcesCompat.getDrawable(context.resources, R.drawable.app_light_bg, null)
-//            }
+            if (isDark) {
+                nativeAdView.background =
+                    ResourcesCompat.getDrawable(context.resources, R.drawable.app_dark_bg, null)
+                headlineTv.setTextColor(
+                    ResourcesCompat.getColor(
+                        context.resources,
+                        R.color.app_light_bg,
+                        null
+                    )
+                )
+                bodyTv.setTextColor(
+                    ResourcesCompat.getColor(
+                        context.resources,
+                        R.color.app_light_bg,
+                        null
+                    )
+                )
+            } else {
+                nativeAdView.background =
+                    ResourcesCompat.getDrawable(context.resources, R.drawable.app_light_bg, null)
+                headlineTv.setTextColor(
+                    ResourcesCompat.getColor(
+                        context.resources,
+                        R.color.app_dark_bg,
+                        null
+                    )
+                )
+                bodyTv.setTextColor(
+                    ResourcesCompat.getColor(
+                        context.resources,
+                        R.color.app_dark_bg,
+                        null
+                    )
+                )
+            }
 
-            headlineTv.text = nativeAd.headline
+            val advertiserStoreText: String?
+
+            //mediaView
             nativeAdView.mediaView = mediaView
             mediaView.mediaContent = nativeAd.mediaContent
 
+            //headline
+            nativeAdView.headlineView = headline
+            if (nativeAd.headline == null) {
+                headline.visibility = View.VISIBLE
+                headlineTv.text = ""
+            } else {
+                headlineTv.text = nativeAd.headline
+            }
+
             // Body
+            nativeAdView.bodyView = bodyTv
             if (nativeAd.body == null) {
                 bodyTv.visibility = View.INVISIBLE
             } else {
@@ -72,6 +118,7 @@ class NativeAdManager(
             }
 
             // Call to Action
+            nativeAdView.callToActionView = callToActionBtn
             if (nativeAd.callToAction == null) {
                 callToActionBtn.visibility = View.INVISIBLE
             } else {
@@ -80,6 +127,7 @@ class NativeAdManager(
             }
 
             // Icon
+            nativeAdView.iconView = icon
             if (nativeAd.icon == null) {
                 icon.visibility = View.GONE
             } else {
@@ -87,25 +135,36 @@ class NativeAdManager(
                 icon.visibility = View.VISIBLE
             }
 
-            // Star Rating
-            if (nativeAd.starRating == null) {
-                ratingBar.visibility = View.INVISIBLE
+            // Advertiser and Store View
+            if (hasOnlyStore(nativeAd)) {
+                nativeAdView.storeView = advertiserStoreView
+                advertiserStoreText = nativeAd.store
+                advertiserStoreView.text = advertiserStoreText
+            } else if (nativeAd.advertiser != null) {
+                nativeAdView.advertiserView = advertiserStoreView
+                advertiserStoreText = nativeAd.advertiser
+                advertiserStoreView.text = advertiserStoreText
             } else {
-                ratingBar.rating = nativeAd.starRating!!.toFloat()
-                ratingBar.visibility = View.VISIBLE
+                advertiserStoreText = ""
             }
 
-            // Advertiser
-            if (nativeAd.advertiser == null) {
-                advertiser.visibility = View.INVISIBLE
+            // Star Rating
+            val rating: Double? = nativeAd.starRating
+            if (rating != null && rating > 0) {
+                advertiserStoreView.isVisible = false
+                ratingBar.isVisible = true
+                nativeAdView.starRatingView = ratingBar
+                ratingBar.rating = nativeAd.starRating!!.toFloat()
             } else {
-                advertiser.text = nativeAd.advertiser
-                advertiser.visibility = View.VISIBLE
+                advertiserStoreView.isVisible = true
+                ratingBar.isVisible = false
+                advertiserStoreView.text = advertiserStoreText
             }
 
             nativeAdView.setNativeAd(nativeAd)
 
         }
+
         // Attach the ad view to the provided container
         container.removeAllViews()
         container.addView(binding.root)
@@ -113,27 +172,65 @@ class NativeAdManager(
 
     private fun populateMediumSmallAd(
         nativeAd: NativeAd,
-        binding: AdNativeMediumSmallViewBinding,
+        binding: NativeSmallMediumAdViewBinding,
         container: FrameLayout,
         isDark: Boolean
     ) {
         binding.apply {
 
-//            if (isDark){
-//                nativeAdView.background = ResourcesCompat.getDrawable(context.resources, R.d, null)
-//                headlineTv.setTextColor(ResourcesCompat.getColor(context.resources, R.color.app_light_bg, null))
-//                bodyTv.setTextColor(ResourcesCompat.getColor(context.resources, R.color.app_light_bg, null))
-//            }else{
-//                nativeAdView.background = ResourcesCompat.getDrawable(context.resources, R.drawable.app_light_bg, null)
-//                headlineTv.setTextColor(ResourcesCompat.getColor(context.resources, R.color.app_dark_bg, null))
-//                bodyTv.setTextColor(ResourcesCompat.getColor(context.resources, R.color.app_dark_bg, null))
-//            }
+            if (isDark) {
+                nativeAdView.background =
+                    ResourcesCompat.getDrawable(context.resources, R.drawable.app_dark_bg, null)
+                headlineTv.setTextColor(
+                    ResourcesCompat.getColor(
+                        context.resources,
+                        R.color.app_light_bg,
+                        null
+                    )
+                )
+                bodyTv.setTextColor(
+                    ResourcesCompat.getColor(
+                        context.resources,
+                        R.color.app_light_bg,
+                        null
+                    )
+                )
+            } else {
+                nativeAdView.background =
+                    ResourcesCompat.getDrawable(context.resources, R.drawable.app_light_bg, null)
+                headlineTv.setTextColor(
+                    ResourcesCompat.getColor(
+                        context.resources,
+                        R.color.app_dark_bg,
+                        null
+                    )
+                )
+                bodyTv.setTextColor(
+                    ResourcesCompat.getColor(
+                        context.resources,
+                        R.color.app_dark_bg,
+                        null
+                    )
+                )
+            }
 
-            headlineTv.text = nativeAd.headline
+            val advertiserStoreText: String?
+
+            //mediaView
             nativeAdView.mediaView = mediaView
             mediaView.mediaContent = nativeAd.mediaContent
 
+            //headline
+            nativeAdView.headlineView = headline
+            if (nativeAd.headline == null) {
+                headline.visibility = View.VISIBLE
+                headlineTv.text = ""
+            } else {
+                headlineTv.text = nativeAd.headline
+            }
+
             // Body
+            nativeAdView.bodyView = bodyTv
             if (nativeAd.body == null) {
                 bodyTv.visibility = View.INVISIBLE
             } else {
@@ -142,6 +239,7 @@ class NativeAdManager(
             }
 
             // Call to Action
+            nativeAdView.callToActionView = callToActionBtn
             if (nativeAd.callToAction == null) {
                 callToActionBtn.visibility = View.INVISIBLE
             } else {
@@ -150,6 +248,7 @@ class NativeAdManager(
             }
 
             // Icon
+            nativeAdView.iconView = icon
             if (nativeAd.icon == null) {
                 icon.visibility = View.GONE
             } else {
@@ -157,31 +256,42 @@ class NativeAdManager(
                 icon.visibility = View.VISIBLE
             }
 
-            // Star Rating
-            if (nativeAd.starRating == null) {
-                ratingBar.visibility = View.INVISIBLE
+            // Advertiser and Store View
+            if (hasOnlyStore(nativeAd)) {
+                nativeAdView.storeView = advertiserStoreView
+                advertiserStoreText = nativeAd.store
+                advertiserStoreView.text = advertiserStoreText
+            } else if (nativeAd.advertiser != null) {
+                nativeAdView.advertiserView = advertiserStoreView
+                advertiserStoreText = nativeAd.advertiser
+                advertiserStoreView.text = advertiserStoreText
             } else {
-                ratingBar.rating = nativeAd.starRating!!.toFloat()
-                ratingBar.visibility = View.VISIBLE
+                advertiserStoreText = ""
             }
 
-            // Advertiser
-            nativeAdView.advertiserView = advertiser
-            if (nativeAd.advertiser == null) {
-                advertiser.visibility = View.VISIBLE
-                advertiser.text = ""
+            // Star Rating
+            val rating: Double? = nativeAd.starRating
+            if (rating != null && rating > 0) {
+                advertiserStoreView.isVisible = false
+                ratingBar.isVisible = true
+                nativeAdView.starRatingView = ratingBar
+                ratingBar.rating = nativeAd.starRating!!.toFloat()
             } else {
-                advertiser.text = nativeAd.advertiser
-                advertiser.visibility = View.VISIBLE
+                advertiserStoreView.isVisible = true
+                ratingBar.isVisible = false
+                advertiserStoreView.text = advertiserStoreText
             }
 
             nativeAdView.setNativeAd(nativeAd)
-
         }
 
         // Attach the ad view to the provided container
         container.removeAllViews()
         container.addView(binding.root)
+    }
+
+    private fun hasOnlyStore(nativeAd: NativeAd): Boolean {
+        return nativeAd.store != null && nativeAd.advertiser == null
     }
 
 }
