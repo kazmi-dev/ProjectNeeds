@@ -1,8 +1,10 @@
-package com.cooptech.pdfeditor.mvm.modules
-
-import com.cooptech.pdfeditor.R
+import com.capra.live.hdwallpaper.R
+import com.capra.live.hdwallpaper.util.AppSettings.Companion.API_KEY
 import com.google.firebase.Firebase
+import com.google.firebase.remoteconfig.ConfigUpdate
+import com.google.firebase.remoteconfig.ConfigUpdateListener
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
+import com.google.firebase.remoteconfig.FirebaseRemoteConfigException
 import com.google.firebase.remoteconfig.remoteConfig
 import com.google.firebase.remoteconfig.remoteConfigSettings
 import dagger.Module
@@ -17,16 +19,46 @@ object RemoteConfigModule {
 
     @Provides
     @Singleton
-    fun provideRemoteConfig(): FirebaseRemoteConfig {
-        // Initialize Firebase Remote Config
-        val remoteConfig: FirebaseRemoteConfig = Firebase.remoteConfig
-        val configSettings = remoteConfigSettings {
-            minimumFetchIntervalInSeconds = 3600
+    fun providesFirebaseRemoteConfig(): FirebaseRemoteConfig{
+        val remoteConfig = Firebase.remoteConfig.apply {
+            val configSettings = remoteConfigSettings {
+                minimumFetchIntervalInSeconds = 3600
+            }
+            setConfigSettingsAsync(configSettings)
+            setDefaultsAsync(R.xml.remote_config_defaults)
         }
-        remoteConfig.setConfigSettingsAsync(configSettings)
-        remoteConfig.setDefaultsAsync(R.xml.remote_confiq_defaults)
+        fetchAndActivate(remoteConfig)
         return remoteConfig
     }
 
+    private fun fetchAndActivate(remoteConfig: FirebaseRemoteConfig) {
+        remoteConfig.fetchAndActivate()
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val updates = task.result
+                    getData(remoteConfig)
+                }
+            }
+            .addOnFailureListener {
+                it.printStackTrace()
+            }
+    }
+
+    private fun getData(remoteConfig: FirebaseRemoteConfig) {
+        API_KEY = remoteConfig.getString("api_key")
+    }
+
+    private fun configUpdateListener(remoteConfig: FirebaseRemoteConfig) {
+        remoteConfig.addOnConfigUpdateListener(object : ConfigUpdateListener {
+            override fun onUpdate(configUpdate: ConfigUpdate) {
+                remoteConfig.activate()
+            }
+
+            override fun onError(error: FirebaseRemoteConfigException) {
+                error.printStackTrace()
+            }
+
+        })
+    }
 
 }
