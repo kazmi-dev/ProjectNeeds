@@ -36,16 +36,12 @@ object RemoteConfigModule {
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     val updates = task.result
-                    getData(remoteConfig)
+                    //get data
                 }
             }
             .addOnFailureListener {
                 it.printStackTrace()
             }
-    }
-
-    private fun getData(remoteConfig: FirebaseRemoteConfig) {
-        API_KEY = remoteConfig.getString("api_key")
     }
 
     private fun configUpdateListener(remoteConfig: FirebaseRemoteConfig) {
