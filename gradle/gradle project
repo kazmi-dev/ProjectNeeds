@@ -1,0 +1,17 @@
+plugins {
+ alias(libs.plugins.ksp)
+    alias(libs.plugins.safe.args)
+    alias(libs.plugins.dagger.hilt)
+}
+
+ debug {
+            resValue("string", "ad_mob_app_id", "ca-app-pub-3940256099942544~3347511713")
+            resValue("string", "interstitial_ad_id", "ca-app-pub-3940256099942544/1033173712")
+            resValue("string", "native_ad_id", "ca-app-pub-3940256099942544/2247696110")
+            resValue("string", "collapsive_banner_ad_id", "ca-app-pub-3940256099942544/2014213617")
+            resValue("string", "banner_ad_id", "ca-app-pub-3940256099942544/9214589741")
+            resValue("string", "app_open_ad_id", "ca-app-pub-3940256099942544/9257395921")
+            resValue("string", "rewarded_ad", "ca-app-pub-3940256099942544/5224354917")
+            resValue("string", "reward_interstitial_ad", "ca-app-pub-3940256099942544/5354046379")
+
+        }
