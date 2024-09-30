@@ -1,0 +1,64 @@
+[versions]
+lifecycle_version = "2.8.5"
+nav_version = "2.8.0"
+dagger_hilt_version = "2.52"
+ksp_version = "2.0.20-1.0.25"
+datastore_version = "1.1.1"
+gson_version = "2.11.0"
+glide_version = "4.16.0"
+coroutines_version = "1.8.1"
+sdp_ssp_version = "1.1.1"
+coil_version = "2.7.0"
+gpu_image_version = "2.1.0"
+bg_remover_version = "1.0.4"
+google_services_version = "23.3.0"
+photo_editor_version = "3.0.2"
+
+
+[libraries]
+#google services
+google-services = { group = "com.google.android.gms", name = "play-services-ads", version.ref = "google_services_version" }
+
+#Lifecycle
+viewmodel = {group = "androidx.lifecycle", name = "lifecycle-viewmodel-ktx", version.ref = "lifecycle_version"}
+livedata = {group = "androidx.lifecycle", name = "lifecycle-livedata-ktx", version.ref = "lifecycle_version"}
+process-lifecycle-owner = {group = "androidx.lifecycle", name = "lifecycle-process", version.ref = "lifecycle_version"}
+
+#Navigation Component
+navigation-component-fragment = {group = "androidx.navigation", name = "navigation-fragment", version.ref = "nav_version"}
+navigation-component-ui = {group = "androidx.navigation", name = "navigation-ui", version.ref = "nav_version"}
+navigation-component-dynamic-feature = {group = "androidx.navigation", name = "navigation-dynamic-features-fragment", version.ref = "nav_version"}
+
+#dagger-hilt
+dagger-hilt-android = {group = "com.google.dagger", name = "hilt-android", version.ref = "dagger_hilt_version"}
+dagger-hilt-compiler = {group = "com.google.dagger", name = "hilt-android-compiler", version.ref = "dagger_hilt_version"}
+
+#preference datastore
+datastore-preference = {group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore_version"}
+datastore-proto = {group = "androidx.datastore", name = "datastore", version.ref = "datastore_version"}
+
+#gson
+gson = {group = "com.google.code.gson", name = "gson", version.ref = "gson_version"}
+
+#Glide
+glide = {group = "com.github.bumptech.glide", name = "glide", version.ref = "glide_version"}
+
+#Kotlin coroutines
+coroutines = {group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines_version"}
+
+#sdp ssp
+sdp = {group = "com.intuit.sdp", name = "sdp-android", version.ref = "sdp_ssp_version"}
+ssp = {group = "com.intuit.ssp", name = "ssp-android", version.ref = "sdp_ssp_version"}
+
+#coil image loading
+coil = {group = "io.coil-kt", name = "coil", version.ref = "coil_version"}
+
+[bundles]
+units = ["sdp", "ssp"]
+
+
+[plugins]
+#Dagger-hilt
+dagger-hilt = {id = "com.google.dagger.hilt.android", version.ref = "dagger_hilt_version"}
+ksp = {id = "com.google.devtools.ksp", version.ref = "ksp_version"}
+safe-args = {id = "androidx.navigation.safeargs.kotlin", version.ref = "nav_version"}
