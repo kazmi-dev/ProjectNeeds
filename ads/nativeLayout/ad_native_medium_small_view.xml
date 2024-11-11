@@ -13,7 +13,7 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/background"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="@dimen/_150sdp"
         android:layout_centerInParent="true"
         android:padding="5dp"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -23,25 +23,25 @@
 
         <com.google.android.gms.ads.nativead.MediaView
             android:id="@+id/media_view"
-            android:layout_width="match_parent"
-            android:layout_height="@dimen/_120sdp"
-            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_width="@dimen/_150sdp"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toTopOf="@+id/callToActionBtn"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/middle"
-            android:layout_width="match_parent"
-            android:layout_height="@dimen/_35sdp"
-            android:layout_marginTop="@dimen/_3sdp"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/_40sdp"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/media_view">
+            app:layout_constraintStart_toEndOf="@+id/media_view"
+            app:layout_constraintTop_toTopOf="@+id/media_view">
 
             <androidx.constraintlayout.widget.ConstraintLayout
 
                 android:layout_width="0dp"
                 android:layout_height="0dp"
+                android:layout_marginStart="@dimen/_4sdp"
                 android:orientation="horizontal"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
@@ -71,12 +71,12 @@
                     app:layout_constraintTop_toTopOf="parent">
 
                     <LinearLayout
-                        android:id="@+id/headline"
+                        android:id="@+id/headlineView"
                         android:layout_width="match_parent"
                         android:layout_height="0dp"
                         android:layout_weight="0.5"
                         android:background="@android:color/transparent"
-                        android:gravity="start"
+                        android:gravity="start|center"
                         android:orientation="horizontal"
                         app:layout_constraintBottom_toTopOf="@+id/row_two"
                         app:layout_constraintEnd_toEndOf="parent"
@@ -89,8 +89,9 @@
                             android:layout_height="match_parent"
                             android:layout_margin="0dp"
                             android:lines="1"
+                            android:paddingHorizontal="@dimen/_3sdp"
                             android:textColor="@color/text_gray"
-                            android:textSize="12sp"
+                            android:textSize="@dimen/_11ssp"
                             android:textStyle="bold"
                             app:layout_constraintBottom_toBottomOf="parent"
                             app:layout_constraintEnd_toEndOf="parent"
@@ -103,16 +104,18 @@
                         android:layout_width="match_parent"
                         android:layout_height="0dp"
                         android:layout_weight="0.5"
+                        android:paddingHorizontal="@dimen/_3sdp"
+                        android:gravity="center|start"
                         android:orientation="horizontal"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/headline">
+                        app:layout_constraintTop_toBottomOf="@id/headlineView">
 
                         <TextView
                             android:id="@+id/ad_notification_view"
-                            android:layout_width="@dimen/_22sdp"
-                            android:layout_height="@dimen/_17sdp"
+                            android:layout_width="@dimen/_18sdp"
+                            android:layout_height="@dimen/_14sdp"
                             android:layout_marginEnd="@dimen/_8sdp"
                             android:background="@drawable/ad_rounded_corners_shape"
                             android:gravity="center"
@@ -143,7 +146,7 @@
                         </RatingBar>
 
                         <TextView
-                            android:id="@+id/advertiser"
+                            android:id="@+id/advertiserStoreView"
                             android:layout_width="wrap_content"
                             android:layout_height="match_parent"
                             android:background="@color/white"
@@ -166,14 +169,16 @@
         </androidx.constraintlayout.widget.ConstraintLayout>
 
         <TextView
-            android:id="@+id/bodyTv"
-            android:layout_width="match_parent"
-            android:layout_height="@dimen/_20sdp"
+            android:id="@+id/bodyView"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
             android:paddingHorizontal="@dimen/_6sdp"
             android:paddingBottom="@dimen/_4sdp"
             android:textColor="@color/text_gray"
+            android:textSize="@dimen/_9ssp"
+            app:layout_constraintBottom_toTopOf="@+id/callToActionBtn"
             app:layout_constraintEnd_toEndOf="@+id/middle"
-            app:layout_constraintStart_toStartOf="@+id/middle"
+            app:layout_constraintStart_toEndOf="@+id/media_view"
             app:layout_constraintTop_toBottomOf="@id/middle" />
 
         <com.google.android.material.button.MaterialButton
@@ -181,16 +186,15 @@
             android:layout_width="match_parent"
             android:layout_height="@dimen/_35sdp"
             android:layout_marginHorizontal="@dimen/_2sdp"
-            android:layout_marginTop="@dimen/_3sdp"
-            android:backgroundTint="@color/blue"
+            android:backgroundTint="@color/btn_gradient_end"
             android:gravity="center"
             android:lines="1"
             android:textColor="@color/white"
-            android:textSize="@dimen/_11sdp"
+            android:textSize="@dimen/_12sdp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/bodyTv" />
+            app:layout_constraintStart_toStartOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
+
 </com.google.android.gms.ads.nativead.NativeAdView>
