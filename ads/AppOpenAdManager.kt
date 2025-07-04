@@ -1,180 +1,190 @@
-package com.cooptech.collagephotoeditor.ads
-
 import android.app.Activity
 import android.app.Application.ActivityLifecycleCallbacks
+import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
-import com.cooptech.collagephotoeditor.ads.InterstitialAdManager.Companion.isInterstitialAdShowing
-import com.cooptech.collagephotoeditor.R
-import com.cooptech.collagephotoeditor.application.ApplicationClass
-import com.cooptech.collagephotoeditor.utils.AppSettings
-import com.cooptech.collagephotoeditor.utils.AppSettings.Companion.isSplashScreen
 import com.google.android.gms.ads.AdError
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.FullScreenContentCallback
 import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.appopen.AppOpenAd
 import com.google.android.gms.ads.appopen.AppOpenAd.AppOpenAdLoadCallback
+import com.kazmi.dev.gameborse.R
+import com.kazmi.dev.gameborse.application.ApplicationClass
+import dagger.hilt.android.qualifiers.ApplicationContext
+import java.lang.ref.WeakReference
 import javax.inject.Inject
+import javax.inject.Singleton
 
-/**
----------------------------------------------
-This is App open Ad implementation
----------------------------------------------
- */
-
-class AppOpenAdManager @Inject constructor(private val mBaseApp: ApplicationClass) :
-    ActivityLifecycleCallbacks, LifecycleEventObserver {
+@Singleton
+class AppOpenAdManager @Inject constructor(
+    @ApplicationContext private val context: Context
+) : ActivityLifecycleCallbacks, LifecycleEventObserver {
 
     init {
-        mBaseApp.registerActivityLifecycleCallbacks(this)
+        (context as? ApplicationClass)?.registerActivityLifecycleCallbacks(this)
         ProcessLifecycleOwner.get().lifecycle.addObserver(this)
     }
 
-    private val APP_OPEN_LOG = "357893657836"
+    companion object {
+        private const val APP_OPEN_LOG = "AppOpenAdManager_982648927492"
+        var isInterstitialAdShowing: Boolean = false
+    }
 
-    //app open ad
     private var appOpenAd: AppOpenAd? = null
+    private var isAdLoading: Boolean = false
+    private var currentActivity: WeakReference<Activity>? = null
+    private var isShowAdONDemand: Boolean = false
 
-    //app open ad load and visibility
-    private var isLoadingAd: Boolean = false
-    private var isShowingAd: Boolean = false
-
-    //show ad on first application open
-    private var isFirstAppOpen = true
-
-    //get current activity
-    private var currentActivity: Activity? = null
-
-    //Ad visibility manager
-    private var appOpenVisibilityManager: AdVisibilityController? = null
-
-    private fun isAdAvailable(): Boolean {
-        return appOpenAd != null
+    fun setShowAdOnDemand(isShowAdOnDemand: Boolean) {
+        this.isShowAdONDemand = isShowAdOnDemand
     }
 
-    fun setAppOpenVisibilityManager(appOpenVisibilityController: AdVisibilityController) {
-        appOpenVisibilityManager = appOpenVisibilityController
-    }
+    fun preloadAd() {
 
-    fun loadAd() {
-
-        if (isLoadingAd){
+        //check if ad already available
+        if (appOpenAd != null) {
+            Log.d(APP_OPEN_LOG, "preloadAd: Ad already available")
             return
         }
 
-        if (AppSettings.isRemoveAds){
+        //check if ad is loading
+        if (isAdLoading) {
+            Log.d(APP_OPEN_LOG, "preloadAd: Ad already loading")
             return
         }
 
-        isLoadingAd = true
+        //load ad
+        val adUnitId = context.getString(R.string.app_open_ad_id)
+        loadAd(adUnitId) { Log.d(APP_OPEN_LOG, "preloadAd: Ad loaded") }
 
-        val requestAd = AdRequest.Builder().build()
+    }
+
+    private fun attachFullScreenAdCallback(
+        isPreloadAfterDismiss: Boolean,
+        callback: ((AdState) -> Unit)? = null
+    ) {
+        //callback for ad showing
+        appOpenAd?.fullScreenContentCallback = object : FullScreenContentCallback() {
+
+            override fun onAdShowedFullScreenContent() {
+                Log.d(APP_OPEN_LOG, "onAdShowedFullScreenContent: Ad showed")
+                callback?.invoke(AdState.SHOWED)
+            }
+
+            override fun onAdDismissedFullScreenContent() {
+                Log.d(
+                    APP_OPEN_LOG,
+                    "onAdDismissedFullScreenContent: Ad dismissed preloading ad"
+                )
+                appOpenAd = null
+                if (isPreloadAfterDismiss) preloadAd()
+                callback?.invoke(AdState.DISMISSED)
+            }
+
+            override fun onAdFailedToShowFullScreenContent(adShowError: AdError) {
+                Log.d(
+                    APP_OPEN_LOG,
+                    "onAdFailedToShowFullScreenContent: Ad failed to show ${adShowError.message}"
+                )
+                appOpenAd = null
+                callback?.invoke(AdState.FAILED_TO_SHOW)
+            }
+        }
+    }
+
+    private fun loadAd(adUniId: String, callback: (Boolean) -> Unit) {
+        isAdLoading = true
+        val adRequest = AdRequest.Builder().build()
         AppOpenAd.load(
-            mBaseApp.applicationContext,
-            mBaseApp.getString(R.string.app_open_ad_id),
-            requestAd,
+            context,
+            adUniId,
+            adRequest,
             object : AppOpenAdLoadCallback() {
                 override fun onAdLoaded(ad: AppOpenAd) {
-                    Log.d(APP_OPEN_LOG, "Ad Loaded.")
+                    isAdLoading = false
                     appOpenAd = ad
-                    isLoadingAd = false
-//                    if (isFirstAppOpen) {
-//                        Log.d(APP_OPEN_LOG, "first open app.")
-//                        isFirstAppOpen = false
-//                        showAdIfAvailable()
-//                    }
+                    Log.d(APP_OPEN_LOG, "onAdLoaded: Ad Loaded.")
+                    callback(true)
                 }
 
-                override fun onAdFailedToLoad(error: LoadAdError) {
-                    Log.d(APP_OPEN_LOG, "Failed to load Ad: error: $error")
-                    isLoadingAd = false
+                override fun onAdFailedToLoad(adLoadError: LoadAdError) {
+                    isAdLoading = false
+                    appOpenAd = null
+                    Log.d(APP_OPEN_LOG, "onAdFailedToLoad: ${adLoadError.message}")
+                    callback(false)
                 }
             }
         )
-
     }
 
-    override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {}
+    private fun showAdIfAvailable() {
+        //check if ad is available
+        if (appOpenAd == null) {
+            Log.d(APP_OPEN_LOG, "showAdIfAvailable: Ad not available preloading ad.")
+            preloadAd()
+            return
+        }
 
-    override fun onActivityStarted(activity: Activity) {
-        if (!isShowingAd) {
-            currentActivity = activity
+        //show Ad
+        showAd(isPreloadAfterDismiss = true)
+    }
+
+    private fun showAdOnDemand() {
+        //check if ad is Available
+        if (appOpenAd == null) {
+            Log.d(APP_OPEN_LOG, "showAdOnDemand: Ad not available loading ad.")
+            val adUnitId = context.getString(R.string.app_open_ad_id)
+            loadAd(adUnitId) { isLoaded ->
+                if (isLoaded) {
+                    showAd(isPreloadAfterDismiss = false)
+                } else {
+                    Log.d(APP_OPEN_LOG, "showAdOnDemand: Ad failed to load.")
+                }
+            }
+            return
+        }
+
+        //show Ad
+        showAd(isPreloadAfterDismiss = false)
+    }
+
+    private fun showAd(isPreloadAfterDismiss: Boolean) {
+        attachFullScreenAdCallback(isPreloadAfterDismiss)
+        currentActivity?.get()?.let {
+            appOpenAd?.show(it)
         }
     }
 
+
+    //activity lifecycle callbacks
+    override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {}
+    override fun onActivityStarted(activity: Activity) {
+        currentActivity = WeakReference(activity)
+    }
+
     override fun onActivityResumed(activity: Activity) {}
-
     override fun onActivityPaused(activity: Activity) {}
-
     override fun onActivityStopped(activity: Activity) {}
-
     override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {}
-
     override fun onActivityDestroyed(activity: Activity) {
+        currentActivity?.clear()
         currentActivity = null
     }
 
 
-    private fun showAdIfAvailable() {
-
-        //return if app open ad is not loaded
-        if (!isAdAvailable()) {
-            Log.d(APP_OPEN_LOG, "Ad not available")
-            loadAd()
-            return
-        }
-
-        //app open load callback
-        appOpenAd?.fullScreenContentCallback = object : FullScreenContentCallback() {
-
-            override fun onAdShowedFullScreenContent() {
-                Log.d(APP_OPEN_LOG, "Ad showing")
-                appOpenVisibilityManager?.closeAds()
-            }
-
-            override fun onAdDismissedFullScreenContent() {
-                Log.d(APP_OPEN_LOG, "Ad Dismissed")
-                loadAd()
-                appOpenAd = null
-                isShowingAd = false
-                Log.d("23658473584354", "isShowingAd: $isShowingAd ")
-                appOpenVisibilityManager?.restoreAds()
-            }
-
-            override fun onAdFailedToShowFullScreenContent(error: AdError) {
-                Log.d(APP_OPEN_LOG, "Ad Failed to Load: ${error.message}")
-                appOpenAd = null
-                isShowingAd = false
-                loadAd()
-            }
-
-        }
-
-        currentActivity?.let { activity ->
-            isShowingAd = true
-            appOpenAd?.show(activity)
-        }
-
-
-    }
-
-    override fun onStateChanged(source: LifecycleOwner, event: Lifecycle.Event) {
-        if (event == Lifecycle.Event.ON_START) {
-            manageAdDisplay()
+    //Lifecycle even observer
+    override fun onStateChanged(
+        source: LifecycleOwner,
+        event: Lifecycle.Event
+    ) {
+        if (event == Lifecycle.Event.ON_START && !isInterstitialAdShowing) {
+            if (isShowAdONDemand) showAdOnDemand() else showAdIfAvailable()
         }
     }
-
-    private fun manageAdDisplay() {
-        if (!isSplashScreen && !isInterstitialAdShowing && !isShowingAd) {
-            showAdIfAvailable()
-        }
-    }
-
-
 
 }
