@@ -1,26 +1,26 @@
-package com.capra.pdfreader.pdfviewer.alldocuments.wordpptexel.filesreader.freeapp.utils
-
 import android.content.Context
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 
-class CustomToast {
+class ToastUtil {
     companion object {
 
         private var toast: Toast? = null
 
-        private fun Context.shortToast(msg: String) {
+        //Context Specific
+        fun Context.shortToast(msg: String) {
             toast?.cancel()
             toast = Toast.makeText(this, msg, Toast.LENGTH_SHORT)
             toast?.show()
         }
 
-        private fun Context.longToast(msg: String) {
+        fun Context.longToast(msg: String) {
             toast?.cancel()
             toast = Toast.makeText(this, msg, Toast.LENGTH_LONG)
             toast?.show()
         }
 
+        //Fragment Specific
         fun Fragment.shortToast(msg: String) {
             try {
                 requireContext().shortToast(msg)
